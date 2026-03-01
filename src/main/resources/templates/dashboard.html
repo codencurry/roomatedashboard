@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Roommate Dashboard</title>
+  <link rel="stylesheet" th:href="@{/dashboard.css}">
+</head>
+
+<body>
+
+<div class="page-header">
+  <h1>Roommate Dashboard</h1>
+  <p class="muted">Add roommates, add expenses, view balances.</p>
+</div>
+
+<div class="grid">
+
+  <div class="card">
+    <h2>Add Roommate</h2>
+    <form method="post" action="/roommates">
+      <input name="name" placeholder="Roommate name (ex: Jeff)" required>
+      <div class="mt-10">
+        <button type="submit">Add</button>
+      </div>
+    </form>
+
+    <h3 class="mt-18">Roommates</h3>
+    <ul>
+      <li th:each="r : ${roommates}" th:text="${r.name}"></li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>Add Expense</h2>
+
+    <div class="error" th:if="${formError}" th:text="${formError}"></div>
+
+    <form method="post" action="/expenses" th:object="${expenseForm}">
+
+      <label>Description</label>
+      <input th:field="*{description}" placeholder="ex: Electric Bill">
+      <div class="error" th:if="${#fields.hasErrors('description')}" th:errors="*{description}"></div>
+
+      <div class="row mt-10">
+        <div>
+          <label>Amount</label>
+          <input th:field="*{amount}" placeholder="120.00">
+          <div class="error" th:if="${#fields.hasErrors('amount')}" th:errors="*{amount}"></div>
+        </div>
+
+        <div>
+          <label>Payer</label>
+          <select th:field="*{payerId}">
+            <option value="" disabled selected>Choose payer</option>
+            <option th:each="r : ${roommates}" th:value="${r.id}" th:text="${r.name}"></option>
+          </select>
+          <div class="error" th:if="${#fields.hasErrors('payerId')}" th:errors="*{payerId}"></div>
+        </div>
+      </div>
+
+      <div class="mt-10">
+        <label>Split with (select 1+)</label>
+        <select multiple size="4" th:field="*{splitRoommateIds}">
+          <option th:each="r : ${roommates}" th:value="${r.id}" th:text="${r.name}"></option>
+        </select>
+
+        <div class="error" th:if="${#fields.hasErrors('splitRoommateIds')}" th:errors="*{splitRoommateIds}"></div>
+        <div class="muted">Tip: Hold Cmd (Mac) or Ctrl (Windows) to multi-select.</div>
+      </div>
+
+      <div class="mt-10">
+        <button type="submit">Add Expense</button>
+      </div>
+
+    </form>
+  </div>
+
+</div>
+
+<div class="card mt-18">
+  <h2>Record Payment</h2>
+  <p class="muted">Use this when someone pays another roommate back.</p>
+
+  <form method="post" action="/payments" th:object="${paymentForm}">
+
+    <div class="row">
+      <div>
+        <label>From (payer)</label>
+        <select th:field="*{fromRoommateId}">
+          <option value="" disabled selected>Choose roommate</option>
+          <option th:each="r : ${roommates}" th:value="${r.id}" th:text="${r.name}"></option>
+        </select>
+        <div class="error" th:if="${#fields.hasErrors('fromRoommateId')}" th:errors="*{fromRoommateId}"></div>
+      </div>
+
+      <div>
+        <label>To (receiver)</label>
+        <select th:field="*{toRoommateId}">
+          <option value="" disabled selected>Choose roommate</option>
+          <option th:each="r : ${roommates}" th:value="${r.id}" th:text="${r.name}"></option>
+        </select>
+        <div class="error" th:if="${#fields.hasErrors('toRoommateId')}" th:errors="*{toRoommateId}"></div>
+      </div>
+    </div>
+
+    <div class="mt-10">
+      <label>Amount</label>
+      <input th:field="*{amount}" placeholder="40.00">
+      <div class="error" th:if="${#fields.hasErrors('amount')}" th:errors="*{amount}"></div>
+    </div>
+
+    <div class="mt-10">
+      <button type="submit">Record Payment</button>
+    </div>
+  </form>
+</div>
+
+<div class="card mt-18">
+  <h2>Balances</h2>
+
+  <table>
+    <thead>
+    <tr>
+      <th>Roommate</th>
+      <th>Net Balance</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    <tr th:each="entry : ${balances.entrySet()}">
+      <td th:text="${entry.key.name}"></td>
+
+      <td>
+        <span th:text="${'$' + entry.value}"></span>
+
+        <span class="tag" th:if="${entry.value > 0}" th:text="'Gets paid'"></span>
+        <span class="tag" th:if="${entry.value < 0}" th:text="'Owes'"></span>
+        <span class="tag" th:if="${entry.value == 0}" th:text="'Even'"></span>
+      </td>
+    </tr>
+    </tbody>
+  </table>
+
+  <p class="muted mt-10">Positive = others owe them. Negative = they owe others.</p>
+  <p class="muted">Tip: People with negative balances should pay people with positive balances.</p>
+</div>
+
+<div class="card mt-18">
+  <h2>Expenses</h2>
+
+  <table>
+    <thead>
+    <tr>
+      <th>When</th>
+      <th>Description</th>
+      <th>Amount</th>
+      <th>Payer</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    <tr th:each="e : ${expenses}">
+      <td th:text="${e.formattedCreatedAt}"></td>
+      <td th:text="${e.description}"></td>
+      <td th:text="${'$' + e.amount}"></td>
+      <td th:text="${e.payer.name}"></td>
+    </tr>
+    </tbody>
+  </table>
+</div>
+
+</body>
+</html>
