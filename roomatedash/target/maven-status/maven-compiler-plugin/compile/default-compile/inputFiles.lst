@@ -1,0 +1,11 @@
+/Users/tammamahad/Downloads/roomatedash/src/main/java/com/tammam/roomatedash/RoomatedashApplication.java
+/Users/tammamahad/Downloads/roomatedash/src/main/java/com/tammam/roomatedash/controller/DashboardController.java
+/Users/tammamahad/Downloads/roomatedash/src/main/java/com/tammam/roomatedash/dto/ExpenseForm.java
+/Users/tammamahad/Downloads/roomatedash/src/main/java/com/tammam/roomatedash/dto/PaymentForm.java
+/Users/tammamahad/Downloads/roomatedash/src/main/java/com/tammam/roomatedash/model/Expense.java
+/Users/tammamahad/Downloads/roomatedash/src/main/java/com/tammam/roomatedash/model/ExpenseSplit.java
+/Users/tammamahad/Downloads/roomatedash/src/main/java/com/tammam/roomatedash/model/Roommate.java
+/Users/tammamahad/Downloads/roomatedash/src/main/java/com/tammam/roomatedash/repo/ExpenseRepository.java
+/Users/tammamahad/Downloads/roomatedash/src/main/java/com/tammam/roomatedash/repo/ExpenseSplitRepository.java
+/Users/tammamahad/Downloads/roomatedash/src/main/java/com/tammam/roomatedash/repo/RoommateRepository.java
+/Users/tammamahad/Downloads/roomatedash/src/main/java/com/tammam/roomatedash/service/DashboardService.java
