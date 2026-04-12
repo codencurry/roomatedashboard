@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Join Household</title>
+  <link rel="stylesheet" th:href="@{/dashboard.css}">
+</head>
+<body>
+
+<div class="auth-panel">
+  <h1>Join Household</h1>
+  <p class="muted">Enter the invite code from your household organizer.</p>
+
+  <div class="error" th:if="${householdError}" th:text="${householdError}"></div>
+
+  <form method="post" action="/households/join" th:object="${joinHouseholdForm}">
+    <label>Invite Code</label>
+    <input th:field="*{inviteCode}" placeholder="ex: ABCD2345">
+    <div class="error" th:if="${#fields.hasErrors('inviteCode')}" th:errors="*{inviteCode}"></div>
+
+    <div class="mt-10">
+      <button type="submit">Join Household</button>
+    </div>
+  </form>
+
+  <p class="muted mt-18">
+    Need a new household? <a href="/households/new">Create one</a>
+  </p>
+</div>
+
+</body>
+</html>

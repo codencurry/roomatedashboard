@@ -2,7 +2,12 @@ package com.tammam.roomatedash.controller;
 
 import com.tammam.roomatedash.dto.ExpenseForm;
 import com.tammam.roomatedash.dto.PaymentForm;
-import com.tammam.roomatedash.service.DashboardService;
+import com.tammam.roomatedash.dto.RoommateForm;
+import com.tammam.roomatedash.exception.DashboardException;
+import com.tammam.roomatedash.service.ExpenseService;
+import com.tammam.roomatedash.service.PaymentService;
+import com.tammam.roomatedash.service.RoommateService;
+import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -12,52 +17,65 @@ import org.springframework.web.bind.annotation.*;
 @Controller
 public class DashboardController {
 
-    private final DashboardService service;
+    private final DashboardModelBuilder dashboardModelBuilder;
+    private final RoommateService roommateService;
+    private final ExpenseService expenseService;
+    private final PaymentService paymentService;
 
-    public DashboardController(DashboardService service) {
-        this.service = service;
+    public DashboardController(DashboardModelBuilder dashboardModelBuilder,
+                               RoommateService roommateService,
+                               ExpenseService expenseService,
+                               PaymentService paymentService) {
+        this.dashboardModelBuilder = dashboardModelBuilder;
+        this.roommateService = roommateService;
+        this.expenseService = expenseService;
+        this.paymentService = paymentService;
     }
 
     @GetMapping("/")
-    public String dashboard(Model model) {
-        model.addAttribute("roommates", service.getRoommates());
-        model.addAttribute("expenses", service.getExpenses());
-        model.addAttribute("balances", service.getBalances());
-        model.addAttribute("expenseForm", new ExpenseForm());
-        model.addAttribute("paymentForm", new PaymentForm());
+    public String dashboard(Model model, HttpSession session) {
+        dashboardModelBuilder.addDashboardPageModel(model, session);
         return "dashboard";
     }
 
     @PostMapping("/roommates")
-    public String addRoommate(@RequestParam String name) {
+    public String addRoommate(@Valid @ModelAttribute("roommateForm") RoommateForm form,
+                              BindingResult bindingResult,
+                              Model model,
+                              HttpSession session) {
+        if (bindingResult.hasErrors()) {
+            dashboardModelBuilder.addDashboardPageModel(model, session);
+            return "dashboard";
+        }
+
         try {
-            service.addRoommate(name);
-        } catch (Exception ignored) {}
+            roommateService.addRoommate(form);
+        } catch (DashboardException e) {
+            dashboardModelBuilder.addDashboardPageModel(model, session);
+            model.addAttribute("dashboardError", e.getMessage());
+            return "dashboard";
+        }
+
         return "redirect:/";
     }
 
     @PostMapping("/expenses")
     public String addExpense(@Valid @ModelAttribute("expenseForm") ExpenseForm form,
                              BindingResult bindingResult,
-                             Model model) {
+                             Model model,
+                             HttpSession session) {
 
         if (bindingResult.hasErrors()) {
-            model.addAttribute("roommates", service.getRoommates());
-            model.addAttribute("expenses", service.getExpenses());
-            model.addAttribute("balances", service.getBalances());
-            model.addAttribute("paymentForm", new PaymentForm());
+            dashboardModelBuilder.addDashboardPageModel(model, session);
             return "dashboard";
         }
 
         try {
-            service.addExpense(form);
+            expenseService.addExpense(form);
             return "redirect:/";
-        } catch (Exception e) {
-            model.addAttribute("roommates", service.getRoommates());
-            model.addAttribute("expenses", service.getExpenses());
-            model.addAttribute("balances", service.getBalances());
-            model.addAttribute("paymentForm", new PaymentForm());
-            model.addAttribute("formError", e.getMessage());
+        } catch (DashboardException e) {
+            dashboardModelBuilder.addDashboardPageModel(model, session);
+            model.addAttribute("dashboardError", e.getMessage());
             return "dashboard";
         }
     }
@@ -65,25 +83,20 @@ public class DashboardController {
     @PostMapping("/payments")
     public String recordPayment(@Valid @ModelAttribute("paymentForm") PaymentForm form,
                                 BindingResult bindingResult,
-                                Model model) {
+                                Model model,
+                                HttpSession session) {
 
         if (bindingResult.hasErrors()) {
-            model.addAttribute("roommates", service.getRoommates());
-            model.addAttribute("expenses", service.getExpenses());
-            model.addAttribute("balances", service.getBalances());
-            model.addAttribute("expenseForm", new ExpenseForm());
+            dashboardModelBuilder.addDashboardPageModel(model, session);
             return "dashboard";
         }
 
         try {
-            service.recordPayment(form);
+            paymentService.recordPayment(form);
             return "redirect:/";
-        } catch (Exception e) {
-            model.addAttribute("roommates", service.getRoommates());
-            model.addAttribute("expenses", service.getExpenses());
-            model.addAttribute("balances", service.getBalances());
-            model.addAttribute("expenseForm", new ExpenseForm());
-            model.addAttribute("formError", e.getMessage());
+        } catch (DashboardException e) {
+            dashboardModelBuilder.addDashboardPageModel(model, session);
+            model.addAttribute("dashboardError", e.getMessage());
             return "dashboard";
         }
     }

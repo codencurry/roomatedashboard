@@ -1,35 +1,147 @@
 body {
   font-family: Arial, sans-serif;
-  margin: 24px;
+  margin: 0;
+  background: #f5f7f8;
+  color: #162126;
+}
+
+.page-shell {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px;
 }
 
 .page-header {
-  text-align: center;
-  margin-bottom: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
+  margin-bottom: 16px;
+}
+
+.page-header h1 {
+  margin: 0;
+}
+
+.header-tools {
+  min-width: 320px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: flex-end;
+}
+
+.auth-panel {
+  max-width: 420px;
+  margin: 60px auto;
+  background: #fff;
+  border: 1px solid #d9e0e3;
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.session-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.session-bar form {
+  margin: 0;
+}
+
+.household-chip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.switcher-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.switcher-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 18px;
+  gap: 20px;
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) minmax(220px, 1.25fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.summary-item {
+  background: #fff;
+  border: 1px solid #d9e0e3;
+  border-radius: 8px;
+  padding: 14px;
+  min-height: 96px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.summary-item-wide {
+  align-items: flex-start;
+}
+
+.summary-label {
+  color: #5f6b72;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.summary-number {
+  display: block;
+  font-size: 28px;
+  font-weight: bold;
 }
 
 .card {
-  border: 1px solid #ddd;
-  border-radius: 10px;
-  padding: 16px;
+  background: #fff;
+  border: 1px solid #d9e0e3;
+  border-radius: 8px;
+  padding: 18px;
+}
+
+.card h2,
+.card h3 {
+  margin-top: 0;
+  margin-bottom: 14px;
 }
 
 table {
   width: 100%;
   border-collapse: collapse;
+  table-layout: fixed;
 }
 
 th,
 td {
-  border-bottom: 1px solid #eee;
-  padding: 8px;
+  border-bottom: 1px solid #e6ecef;
+  padding: 10px 8px;
   text-align: left;
+  vertical-align: top;
+}
+
+th {
+  font-size: 13px;
+  color: #43515a;
 }
 
 input,
@@ -42,6 +154,21 @@ select {
 button {
   padding: 10px 14px;
   cursor: pointer;
+  border-radius: 6px;
+  border: 1px solid #1c6f78;
+  background: #1c6f78;
+  color: #fff;
+  font: inherit;
+}
+
+button:hover {
+  background: #165b62;
+}
+
+.secondary-button {
+  background: #fff;
+  color: #1c6f78;
+  border-color: #b6c8cd;
 }
 
 .row {
@@ -53,11 +180,16 @@ button {
 .muted {
   color: #666;
   font-size: 12px;
+  line-height: 1.4;
 }
 
 .error {
   color: #b00020;
   margin-top: 8px;
+}
+
+.banner-error {
+  margin-bottom: 16px;
 }
 
 .tag {
@@ -66,7 +198,8 @@ button {
   border-radius: 999px;
   font-size: 12px;
   margin-left: 8px;
-  border: 1px solid #ddd;
+  border: 1px solid #cfd9dd;
+  background: #f8fbfb;
 }
 
 .mt-10 {
@@ -75,4 +208,90 @@ button {
 
 .mt-18 {
   margin-top: 18px;
+}
+
+.simple-list {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.simple-list li + li {
+  margin-top: 6px;
+}
+
+.percentage-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 140px;
+  gap: 10px;
+  align-items: center;
+}
+
+.action-group {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.vertical-actions {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.inline-edit-form {
+  display: block;
+}
+
+.split-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px 0;
+}
+
+.split-row + .split-row {
+  border-top: 1px solid #eef3f5;
+}
+
+.split-main {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 800px) {
+  .page-shell {
+    padding: 12px;
+  }
+
+  .grid,
+  .row,
+  .summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .page-header,
+  .switcher-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .header-tools {
+    min-width: 0;
+    width: 100%;
+    align-items: flex-start;
+  }
+
+  .session-bar {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .percentage-grid,
+  .split-row {
+    grid-template-columns: 1fr;
+    flex-direction: column;
+  }
 }

@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Create Household</title>
+  <link rel="stylesheet" th:href="@{/dashboard.css}">
+</head>
+<body>
+
+<div class="auth-panel">
+  <h1>Create Household</h1>
+  <p class="muted">Add another shared space for your roommates.</p>
+
+  <div class="error" th:if="${householdError}" th:text="${householdError}"></div>
+
+  <form method="post" action="/households" th:object="${householdForm}">
+    <label>Household Name</label>
+    <input th:field="*{name}" placeholder="ex: Apartment 4B">
+    <div class="error" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></div>
+
+    <div class="mt-10">
+      <button type="submit">Create Household</button>
+    </div>
+  </form>
+
+  <p class="muted mt-18">
+    Have an invite code? <a href="/households/join">Join a household</a>
+  </p>
+</div>
+
+</body>
+</html>

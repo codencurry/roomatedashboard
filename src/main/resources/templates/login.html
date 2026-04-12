@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Login - Roommate Dashboard</title>
+  <link rel="stylesheet" th:href="@{/dashboard.css}">
+</head>
+<body>
+
+<div class="auth-panel">
+  <h1>Roommate Dashboard</h1>
+  <p class="muted">Mock login for the class project demo.</p>
+
+  <div class="error" th:if="${authError}" th:text="${authError}"></div>
+
+  <form method="post" action="/login" th:object="${loginForm}">
+    <label>Email</label>
+    <input th:field="*{email}" placeholder="you@example.com">
+    <div class="error" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></div>
+
+    <div class="mt-10">
+      <button type="submit">Log In</button>
+    </div>
+  </form>
+
+  <p class="muted mt-18">
+    No account yet? <a href="/register">Create a mock account</a>
+  </p>
+</div>
+
+</body>
+</html>

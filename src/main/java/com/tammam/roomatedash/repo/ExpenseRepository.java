@@ -3,4 +3,10 @@ package com.tammam.roomatedash.repo;
 import com.tammam.roomatedash.model.Expense;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface ExpenseRepository extends JpaRepository<Expense, Long> {}
+import java.time.LocalDate;
+import java.util.List;
+
+public interface ExpenseRepository extends JpaRepository<Expense, Long> {
+    List<Expense> findByHouseholdId(Long householdId);
+    long countByHouseholdIdAndDueDateLessThanEqual(Long householdId, LocalDate dueDate);
+}

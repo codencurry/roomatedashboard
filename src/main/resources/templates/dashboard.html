@@ -8,32 +8,86 @@
 
 <body>
 
+<div class="page-shell">
+
 <div class="page-header">
-  <h1>Roommate Dashboard</h1>
-  <p class="muted">Add roommates, add expenses, view balances.</p>
+  <div>
+    <h1>Roommate Dashboard</h1>
+    <p class="muted">Track shared expenses, payments, chores, and groceries.</p>
+  </div>
+
+  <div class="header-tools">
+    <div class="session-bar" th:if="${currentUser}">
+      <span th:text="${'Logged in as ' + currentUser.name + ' (' + currentUser.email + ')'}"></span>
+      <form method="post" action="/logout">
+        <button type="submit">Log Out</button>
+      </form>
+    </div>
+
+    <div class="household-chip" th:if="${currentHousehold}">
+      <span th:text="${currentHousehold.displayName}"></span>
+      <span class="muted" th:text="${'Invite: ' + currentHousehold.inviteCode}"></span>
+      <a href="/households/join">Join another</a>
+    </div>
+  </div>
+</div>
+
+<div class="switcher-row" th:if="${householdMemberships != null && householdMemberships.size() > 1}">
+  <span class="muted">Switch household</span>
+  <div class="switcher-actions">
+    <form th:each="m : ${householdMemberships}" method="post" th:action="@{/households/{id}/switch(id=${m.household.id})}">
+      <button type="submit" class="secondary-button" th:text="${m.household.displayName}"></button>
+    </form>
+  </div>
+</div>
+
+<div class="error banner-error" th:if="${dashboardError}" th:text="${dashboardError}"></div>
+
+<div class="summary-grid">
+  <div class="summary-item">
+    <span class="summary-label">Bills Due Soon</span>
+    <span class="summary-number" th:text="${summary.billsDueSoon}">0</span>
+  </div>
+  <div class="summary-item">
+    <span class="summary-label">Unpaid Portions</span>
+    <span class="summary-number" th:text="${summary.unpaidBillPortions}">0</span>
+  </div>
+  <div class="summary-item">
+    <span class="summary-label">Overdue Chores</span>
+    <span class="summary-number" th:text="${summary.overdueChores}">0</span>
+  </div>
+  <div class="summary-item">
+    <span class="summary-label">Pending Groceries</span>
+    <span class="summary-number" th:text="${summary.pendingGroceries}">0</span>
+  </div>
+  <div class="summary-item summary-item-wide">
+    <span class="summary-label">Largest Outstanding Balance</span>
+    <span class="summary-number" th:text="${summary.roommateOwingMost}">None</span>
+    <span class="muted" th:text="${'$' + summary.largestAmountOwed}">0.00</span>
+  </div>
 </div>
 
 <div class="grid">
 
   <div class="card">
     <h2>Add Roommate</h2>
-    <form method="post" action="/roommates">
-      <input name="name" placeholder="Roommate name (ex: Jeff)" required>
+
+    <form method="post" action="/roommates" th:object="${roommateForm}">
+      <input th:field="*{name}" placeholder="Roommate name (ex: Jeff)" required>
+      <div class="error" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></div>
       <div class="mt-10">
         <button type="submit">Add</button>
       </div>
     </form>
 
     <h3 class="mt-18">Roommates</h3>
-    <ul>
+    <ul class="simple-list">
       <li th:each="r : ${roommates}" th:text="${r.name}"></li>
     </ul>
   </div>
 
   <div class="card">
     <h2>Add Expense</h2>
-
-    <div class="error" th:if="${formError}" th:text="${formError}"></div>
 
     <form method="post" action="/expenses" th:object="${expenseForm}">
 
@@ -49,12 +103,27 @@
         </div>
 
         <div>
+          <label>Due Date</label>
+          <input type="date" th:field="*{dueDate}">
+        </div>
+      </div>
+
+      <div class="row mt-10">
+        <div>
           <label>Payer</label>
           <select th:field="*{payerId}">
             <option value="" disabled selected>Choose payer</option>
             <option th:each="r : ${roommates}" th:value="${r.id}" th:text="${r.name}"></option>
           </select>
           <div class="error" th:if="${#fields.hasErrors('payerId')}" th:errors="*{payerId}"></div>
+        </div>
+
+        <div>
+          <label>Split Type</label>
+          <select th:field="*{splitType}">
+            <option value="EQUAL">Equal</option>
+            <option value="CUSTOM">Custom percentages</option>
+          </select>
         </div>
       </div>
 
@@ -66,6 +135,22 @@
 
         <div class="error" th:if="${#fields.hasErrors('splitRoommateIds')}" th:errors="*{splitRoommateIds}"></div>
         <div class="muted">Tip: Hold Cmd (Mac) or Ctrl (Windows) to multi-select.</div>
+      </div>
+
+      <div class="mt-10">
+        <label>Custom Percentages</label>
+        <div class="muted">Used only when split type is custom. Selected roommates must total 100.</div>
+        <div class="percentage-grid mt-10" th:each="r : ${roommates}">
+          <label th:text="${r.name}"></label>
+          <input type="number" min="0" max="100" step="0.01" th:name="|splitPercentages[${r.id}]|" placeholder="0.00">
+        </div>
+      </div>
+
+      <div class="mt-10">
+        <label>
+          <input type="checkbox" th:field="*{recurring}">
+          Monthly recurring bill
+        </label>
       </div>
 
       <div class="mt-10">
@@ -110,9 +195,173 @@
     </div>
 
     <div class="mt-10">
+      <label>Note</label>
+      <input th:field="*{note}" placeholder="ex: Paid back for utilities">
+      <div class="error" th:if="${#fields.hasErrors('note')}" th:errors="*{note}"></div>
+    </div>
+
+    <div class="mt-10">
       <button type="submit">Record Payment</button>
     </div>
   </form>
+</div>
+
+<div class="grid mt-18">
+
+  <div class="card">
+    <h2>Chores</h2>
+
+    <form method="post" action="/chores" th:object="${choreForm}">
+      <label>Chore</label>
+      <input th:field="*{title}" placeholder="ex: Take out trash">
+      <div class="error" th:if="${#fields.hasErrors('title')}" th:errors="*{title}"></div>
+
+      <div class="row mt-10">
+        <div>
+          <label>Assigned To</label>
+          <select th:field="*{assignedToId}">
+            <option value="" disabled selected>Choose roommate</option>
+            <option th:each="r : ${roommates}" th:value="${r.id}" th:text="${r.name}"></option>
+          </select>
+          <div class="error" th:if="${#fields.hasErrors('assignedToId')}" th:errors="*{assignedToId}"></div>
+        </div>
+
+        <div>
+          <label>Due Date</label>
+          <input type="date" th:field="*{dueDate}">
+        </div>
+      </div>
+
+      <div class="mt-10">
+        <label>Description</label>
+        <input th:field="*{description}" placeholder="Optional details">
+        <div class="error" th:if="${#fields.hasErrors('description')}" th:errors="*{description}"></div>
+      </div>
+
+      <div class="mt-10">
+        <label>
+          <input type="checkbox" th:field="*{rotating}">
+          Rotate weekly
+        </label>
+      </div>
+
+      <div class="mt-10">
+        <button type="submit">Add Chore</button>
+      </div>
+    </form>
+
+    <form method="post" action="/chores/rotate-weekly" class="mt-10">
+      <button type="submit" class="secondary-button">Rotate Weekly Chores</button>
+    </form>
+
+    <table class="mt-18">
+      <thead>
+      <tr>
+        <th>Chore</th>
+        <th>Roommate</th>
+        <th>Status</th>
+        <th></th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr th:each="chore : ${chores}">
+        <td>
+          <div th:text="${chore.title}"></div>
+          <div class="muted" th:text="${chore.formattedDueDate}"></div>
+        </td>
+        <td th:text="${chore.assignedTo.name}"></td>
+        <td>
+          <span class="tag" th:text="${chore.status}"></span>
+          <span class="tag" th:if="${chore.rotating}">Rotating</span>
+        </td>
+        <td>
+          <form th:if="${chore.status.name() == 'OPEN'}" method="post" th:action="@{/chores/{id}/complete(id=${chore.id})}">
+            <button type="submit">Complete</button>
+          </form>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>Grocery List</h2>
+
+    <form method="post" action="/groceries" th:object="${groceryItemForm}">
+      <label>Item</label>
+      <input th:field="*{name}" placeholder="ex: Milk">
+      <div class="error" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></div>
+
+      <div class="row mt-10">
+        <div>
+          <label>Quantity</label>
+          <input th:field="*{quantity}" placeholder="ex: 1 gallon">
+          <div class="error" th:if="${#fields.hasErrors('quantity')}" th:errors="*{quantity}"></div>
+        </div>
+
+        <div>
+          <label>Assigned To</label>
+          <select th:field="*{assignedToId}">
+            <option value="">Anyone</option>
+            <option th:each="r : ${roommates}" th:value="${r.id}" th:text="${r.name}"></option>
+          </select>
+        </div>
+      </div>
+
+      <div class="mt-10">
+        <button type="submit">Add Item</button>
+      </div>
+    </form>
+
+    <table class="mt-18">
+      <thead>
+      <tr>
+        <th>Item</th>
+        <th>Assigned</th>
+        <th>Status</th>
+        <th></th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr th:each="item : ${groceryItems}">
+        <td>
+          <form method="post" th:action="@{/groceries/{id}/update(id=${item.id})}" class="inline-edit-form">
+            <input name="name" th:value="${item.name}">
+            <div class="row mt-10">
+              <input name="quantity" th:value="${item.quantity}" placeholder="Quantity">
+              <select name="assignedToId">
+                <option value="">Anyone</option>
+                <option th:each="r : ${roommates}" th:value="${r.id}" th:text="${r.name}" th:selected="${item.assignedTo != null && item.assignedTo.id == r.id}"></option>
+              </select>
+            </div>
+            <div class="action-group mt-10">
+              <button type="submit" class="secondary-button">Save</button>
+            </div>
+          </form>
+        </td>
+        <td th:text="${item.assignedTo == null ? 'Anyone' : item.assignedTo.name}"></td>
+        <td>
+          <span class="tag" th:text="${item.status}"></span>
+        </td>
+        <td>
+          <div class="action-group vertical-actions">
+            <form th:if="${item.status.name() == 'NEEDED'}" method="post" th:action="@{/groceries/{id}/purchase(id=${item.id})}">
+              <button type="submit">Purchased</button>
+            </form>
+            <form method="post" th:action="@{/groceries/{id}/delete(id=${item.id})}">
+              <button type="submit" class="secondary-button">Remove</button>
+            </form>
+          </div>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+
+    <form method="post" action="/groceries/reset" class="mt-10">
+      <button type="submit" class="secondary-button">Reset Purchased Items</button>
+    </form>
+  </div>
+
 </div>
 
 <div class="card mt-18">
@@ -142,7 +391,7 @@
   </table>
 
   <p class="muted mt-10">Positive = others owe them. Negative = they owe others.</p>
-  <p class="muted">Tip: People with negative balances should pay people with positive balances.</p>
+  <p class="muted">Payments move the sender's balance up and the receiver's balance down, settling both toward zero.</p>
 </div>
 
 <div class="card mt-18">
@@ -154,7 +403,9 @@
       <th>When</th>
       <th>Description</th>
       <th>Amount</th>
+      <th>Due</th>
       <th>Payer</th>
+      <th>Split Status</th>
     </tr>
     </thead>
 
@@ -162,11 +413,81 @@
     <tr th:each="e : ${expenses}">
       <td th:text="${e.formattedCreatedAt}"></td>
       <td th:text="${e.description}"></td>
-      <td th:text="${'$' + e.amount}"></td>
+      <td>
+        <span th:text="${'$' + e.amount}"></span>
+        <span class="tag" th:if="${e.recurring}">Monthly</span>
+        <form th:if="${e.recurring}" method="post" th:action="@{/expenses/{id}/generate-next(id=${e.id})}">
+          <button type="submit">Generate Next</button>
+        </form>
+      </td>
+      <td th:text="${e.formattedDueDate}"></td>
       <td th:text="${e.payer.name}"></td>
+      <td>
+        <div th:each="split : ${expenseSplits.get(e.id)}" class="split-row">
+          <div class="split-main">
+            <span th:text="${split.roommate.name + ': $' + split.share}"></span>
+            <span class="tag" th:text="${split.paid ? 'Paid' : 'Unpaid'}"></span>
+            <span class="muted" th:if="${split.percentage != null}" th:text="${split.percentage + '%'}"></span>
+          </div>
+          <form th:if="${!split.paid}" method="post" th:action="@{/expense-splits/{id}/paid(id=${split.id})}">
+            <button type="submit" class="secondary-button">Mark Paid</button>
+          </form>
+        </div>
+      </td>
     </tr>
     </tbody>
   </table>
+</div>
+
+<div class="card mt-18">
+  <h2>Payment History</h2>
+
+  <table>
+    <thead>
+    <tr>
+      <th>When</th>
+      <th>From</th>
+      <th>To</th>
+      <th>Amount</th>
+      <th>Note</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    <tr th:each="p : ${payments}">
+      <td th:text="${p.formattedCreatedAt}"></td>
+      <td th:text="${p.fromRoommate.name}"></td>
+      <td th:text="${p.toRoommate.name}"></td>
+      <td th:text="${'$' + p.amount}"></td>
+      <td th:text="${p.note == null ? '' : p.note}"></td>
+    </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="card mt-18">
+  <h2>Activity Log</h2>
+
+  <table>
+    <thead>
+    <tr>
+      <th>When</th>
+      <th>Type</th>
+      <th>Activity</th>
+      <th>User</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="a : ${recentActivity}">
+      <td th:text="${a.formattedCreatedAt}"></td>
+      <td th:text="${a.actionType}"></td>
+      <td th:text="${a.message}"></td>
+      <td th:text="${a.actor == null ? 'System' : a.actor.name}"></td>
+    </tr>
+    </tbody>
+  </table>
+</div>
+
 </div>
 
 </body>

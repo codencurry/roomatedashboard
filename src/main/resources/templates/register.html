@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Register - Roommate Dashboard</title>
+  <link rel="stylesheet" th:href="@{/dashboard.css}">
+</head>
+<body>
+
+<div class="auth-panel">
+  <h1>Create Mock Account</h1>
+  <p class="muted">This temporary flow creates a demo user without password security.</p>
+
+  <div class="error" th:if="${authError}" th:text="${authError}"></div>
+
+  <form method="post" action="/register" th:object="${registerForm}">
+    <label>Name</label>
+    <input th:field="*{name}" placeholder="Your name">
+    <div class="error" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></div>
+
+    <div class="mt-10">
+      <label>Email</label>
+      <input th:field="*{email}" placeholder="you@example.com">
+      <div class="error" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></div>
+    </div>
+
+    <div class="mt-10">
+      <button type="submit">Create Account</button>
+    </div>
+  </form>
+
+  <p class="muted mt-18">
+    Already have a mock account? <a href="/login">Log in</a>
+  </p>
+</div>
+
+</body>
+</html>
